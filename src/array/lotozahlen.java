@@ -1,6 +1,6 @@
 package array;
 
-public class lotozahlen{
+public class lottozahlen{
     public static void main(String[] args) { 
     int[] kugel = new int[50]; 
 
