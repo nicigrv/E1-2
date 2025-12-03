@@ -9,7 +9,7 @@ public class Main {
 
         
         int x = methoden.random(10, 20);
-        System.out.println("Random zwischen 10 und 20: " + x);
+        System.out.println("Zufällige Zahl zwischen 10 und 20: " + x);
 
         
         int mw3 = methoden.mittelwert(3, 9, 7);
