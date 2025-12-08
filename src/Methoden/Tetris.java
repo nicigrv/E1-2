@@ -4,111 +4,103 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-    public class Tetris extends JPanel implements ActionListener {
-        // Spielfeld-Dimensionen
-        private static final int BREITE = 10;
-        private static final int HOEHE = 20;
-        private static final int BLOCK_GROESSE = 30;
+public class Tetris extends JPanel implements ActionListener {
+    // Spielfeld-Dimensionen
+    private static final int BREITE = 10;
+    private static final int HOEHE = 20;
+    private static final int BLOCK_GROESSE = 30;
 
-        // Spielfeld als 2D-Array (0 = leer, 1-7 = verschiedene Farben)
-        private int[][] spielfeld;
+    // Spielfeld als 2D-Array (0 = leer, 1-7 = verschiedene Farben)
+    private int[][] spielfeld;
 
-        // Aktueller Stein
-        private int[][] aktuellerStein;
-        private int steinX;
-        private int steinY;
-        private int steinFarbe;
+    // Aktueller Stein
+    private int[][] aktuellerStein;
+    private int steinX;
+    private int steinY;
+    private int steinFarbe;
 
-        // Alle Tetromino-Formen
-        private int[][][] steine = {
-                {{1,1,1,1}},                    // I-Stein
-                {{1,1},{1,1}},                  // O-Stein
-                {{0,1,0},{1,1,1}},              // T-Stein
-                {{1,0,0},{1,1,1}},              // L-Stein
-                {{0,0,1},{1,1,1}},              // J-Stein
-                {{0,1,1},{1,1,0}},              // S-Stein
-                {{1,1,0},{0,1,1}}               // Z-Stein
-        };
+    // Alle Tetromino-Formen
+    private int[][][] steine = {
+            {{1,1,1,1}},                    // I-Stein
+            {{1,1},{1,1}},                  // O-Stein
+            {{0,1,0},{1,1,1}},              // T-Stein
+            {{1,0,0},{1,1,1}},              // L-Stein
+            {{0,0,1},{1,1,1}},              // J-Stein
+            {{0,1,1},{1,1,0}},              // S-Stein
+            {{1,1,0},{0,1,1}}               // Z-Stein
+    };
 
-        private Timer timer;
-        private boolean spielLaeuft;
-        private int punkte;
+    private Timer timer;
+    private boolean spielLaeuft;
+    private int punkte;
 
-        public Tetris() {
-            spielfeld = new int[HOEHE][BREITE];
-            spielLaeuft = true;
-            punkte = 0;
+    public Tetris() {
+        spielfeld = new int[HOEHE][BREITE];
+        spielLaeuft = true;
+        punkte = 0;
 
-            // Fenster-Eigenschaften
-            setPreferredSize(new Dimension(BREITE * BLOCK_GROESSE + 200, HOEHE * BLOCK_GROESSE));
-            setBackground(Color.BLACK);
-            setFocusable(true);
+        // Fenster-Eigenschaften
+        setPreferredSize(new Dimension(BREITE * BLOCK_GROESSE + 200, HOEHE * BLOCK_GROESSE));
+        setBackground(Color.BLACK);
+        setFocusable(true);
 
-            // Tastatur-Steuerung
-            addKeyListener(new KeyAdapter() {
-                public void keyPressed(KeyEvent e) {
-                    if (!spielLaeuft) return;
+        // Tastatur-Steuerung
+        addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent e) {
+                if (!spielLaeuft) return;
 
-                    if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-
-                        bewegeStein(-1, 0);
-                    } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-
-                        bewegeStein(+1, 0);
-                    } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-
-                        bewegeStein(0,+1);
-                    } else if (e.getKeyCode() == KeyEvent.VK_UP) {
-
-                        rotiereStein();
-                    } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-
-                        lasseSteinFallen();
-                    }
-                    repaint();
+                if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+                    bewegeStein(-1, 0);
+                } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                    bewegeStein(+1, 0);
+                } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    bewegeStein(0,+1);
+                } else if (e.getKeyCode() == KeyEvent.VK_UP) {
+                    rotiereStein();
+                } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                    lasseSteinFallen();
                 }
-            });
+                repaint();
+            }
+        });
 
-            neuerStein();
-            timer = new Timer(500, this);
-            timer.start();
+        neuerStein();
+        timer = new Timer(500, this);
+        timer.start();
+    }
+
+    // Erstellt einen neuen zufälligen Stein
+    private void neuerStein() {
+        int zufallsIndex = (int)(Math.random() * steine.length);
+        aktuellerStein = kopiereArray(steine[zufallsIndex]);
+        steinFarbe = zufallsIndex + 1;
+        steinX = BREITE / 2 - aktuellerStein[0].length / 2;
+        steinY = 0;
+
+        if (!istPositionGueltig(steinX, steinY)) {
+            spielLaeuft = false;
         }
+    }
 
-        // Erstellt einen neuen zufälligen Stein
-        private void neuerStein() {
-            int zufallsIndex = (int)(Math.random() * steine.length);
-            aktuellerStein = kopiereArray(steine[zufallsIndex]);
-            steinFarbe = zufallsIndex + 1;
-            steinX = BREITE / 2 - aktuellerStein[0].length / 2;
-            steinY = 0;
-
-            if (!istPositionGueltig(steinX, steinY)) {
-                spielLaeuft = false;
+    // Kopiert ein 2D-Array
+    private int[][] kopiereArray(int[][] original) {
+        int[][] kopie = new int[original.length][original[0].length];
+        for (int i = 0; i < original.length; i++) {
+            for (int j = 0; j < original[i].length; j++) {
+                kopie[i][j] = original[i][j];
             }
         }
+        return kopie;
+    }
 
-        // Kopiert ein 2D-Array
-        private int[][] kopiereArray(int[][] original) {
-            int[][] kopie = new int[original.length][original[0].length];
-            for (int i = 0; i < original.length; i++) {
-                for (int j = 0; j < original[i].length; j++) {
-                    kopie[i][j] = original[i][j];
-                }
-            }
-            return kopie;
-        }
+    // Bewegt den Stein um dx und dy
+    private void bewegeStein(int dx, int dy) {
+        int px = steinX + dx;
+        int py = steinY + dy;
 
-        // Bewegt den Stein um dx und dy
-        private void bewegeStein(int dx, int dy) {
-
-               int px = steinX + dx;
-                int py = steinY + dy;
-
-                if(istPositionGueltig(px, py)){
-                steinX = px;
-                steinY = py;
-
-
+        if(istPositionGueltig(px, py)){
+            steinX = px;
+            steinY = py;
         } else if(dy > 0) {
             // Stein kann nicht weiter nach unten
             fixiereStein();
@@ -160,16 +152,13 @@ import java.awt.event.*;
 
     // Lässt Stein sofort fallen
     private void lasseSteinFallen() {
-        // TODO Stein schrittweise nach unten fallen lassen (bis nicht mehr möglich)
-
         while(istPositionGueltig(steinX, steinY+1)) {
             steinY = steinY + 1;
-
         }
         fixiereStein();
         loescheVolleZeilen();
         neuerStein();
-
+    }
 
     // Fixiert den Stein im Spielfeld
     private void fixiereStein() {
@@ -199,16 +188,26 @@ import java.awt.event.*;
 
     // Prüft, ob eine Zeile voll ist
     private boolean istZeileVoll(int zeile) {
-        for(int i; i < spielfeld.length; i++){
-
-
+        for(int i = 0; i < BREITE; i++){
+            if (spielfeld[zeile][i] == 0) {
+                return false;
+            }
         }
-
-
+        return true;
+    }
 
     // Entfernt eine Zeile und verschiebt alle darüber nach unten
     private void entferneZeile(int zeile) {
-        // TODO implementieren
+        // Zeile von oben nach unten überschreiben
+        for (int k = zeile; k > 0; k--) {
+            for (int j = 0; j < BREITE; j++) {
+                spielfeld[k][j] = spielfeld[k-1][j];
+            }
+        }
+        // Die oberste Zeile leer machen
+        for (int j = 0; j < BREITE; j++) {
+            spielfeld[0][j] = 0;
+        }
     }
 
     // Timer-Event: Stein fällt automatisch
@@ -292,5 +291,4 @@ import java.awt.event.*;
         fenster.setLocationRelativeTo(null);
         fenster.setVisible(true);
     }
-}
 }
