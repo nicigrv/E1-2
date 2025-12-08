@@ -1,5 +1,7 @@
 package Methoden;
 
+import java.awt.desktop.SystemSleepListener;
+
 public class Main {
     public static void main(String[] args) {
         int mw2;
@@ -26,5 +28,7 @@ public class Main {
         
         int[] umZahl = methoden.zahl(42);
         System.out.println("Zahlen um 42: " + umZahl[0] + ", " + umZahl[1]);
+
+        System.out.print("test");
     }
 }

@@ -20,17 +20,10 @@ public class methoden{
     public static boolean gerade(int x){
         int r = x % 2;
         if(r==0){
-             boolean y = true;
-             return y; 
+            return true;
         } else{
-            boolean y = false;
-            return y;
+            return false;
         }
-    }
-    
-    public static void konsole (){
-    for(int i=0; i<3; i++){
-    System.out.println("Hallo");}
     }
     
     public static String hallo(String name){
