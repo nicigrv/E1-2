@@ -176,12 +176,14 @@ public class Tetris extends JPanel implements ActionListener {
     }
 
     // Löscht volle Zeilen und verschiebt darüberliegende nach unten
+    int zähler;
     private void loescheVolleZeilen() {
         for (int i = HOEHE - 1; i >= 0; i--) {
             if (istZeileVoll(i)) {
                 entferneZeile(i);
                 i++; // Prüfe diese Zeile nochmal
                 punkte += 100;
+                zähler++;
             }
         }
     }

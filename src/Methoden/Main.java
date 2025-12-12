@@ -30,5 +30,8 @@ public class Main {
         System.out.println("Zahlen um 42: " + umZahl[0] + ", " + umZahl[1]);
 
         System.out.print("test");
+
+        int aufgabe = methoden.aufgabe(3,7,12);
+        System.out.println("Die höchste Zahl ist: " + aufgabe);
     }
 }
