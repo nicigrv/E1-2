@@ -22,7 +22,7 @@ public class Main {
         System.out.println("Ist 12 gerade? " + gerade);
 
         
-        String hallo = methoden.hallo("Nici");
+        String hallo = methoden.hallo("Nicolas");
         System.out.println(hallo);
 
         
