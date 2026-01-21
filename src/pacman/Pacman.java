@@ -34,7 +34,7 @@ public class Pacman extends JPanel implements ActionListener {
     public Pacman() {
         spielfeld = new int[HOEHE][BREITE];
         spielLaeuft = true;
-        punkte = 50;
+        punkte = 0;
         gesamtPunkte = 0;
 
         // Initialisiere Spielfeld
@@ -51,19 +51,22 @@ public class Pacman extends JPanel implements ActionListener {
                 if (!spielLaeuft) return;
 
                 if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-                    bewegePacman(-1, 0);
+                    richtungX = -1;
+                    richtungY = 0;
                 } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                    bewegePacman(1, 0);
+                    richtungX = 1;
+                    richtungY = 0;
                 } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-                    bewegePacman(0, 1);
+                    richtungX = 0;
+                    richtungY = 1;
                 } else if (e.getKeyCode() == KeyEvent.VK_UP) {
-                    bewegePacman(0, -1);
+                    richtungX = 0;
+                    richtungY = -1;
                 }
-                repaint();
             }
         });
 
-        timer = new Timer(500, this);
+        timer = new Timer(300, this);
         timer.start();
     }
 
@@ -131,10 +134,6 @@ public class Pacman extends JPanel implements ActionListener {
         int neuY = pacmanY + dy;
 
         if (istPositionGueltig(neuX, neuY)) {
-            // Merke dir die Richtung
-            richtungX = dx;
-            richtungY = dy;
-
             pacmanX = neuX;
             pacmanY = neuY;
 
@@ -167,6 +166,7 @@ public class Pacman extends JPanel implements ActionListener {
     // Timer-Event
     public void actionPerformed(ActionEvent e) {
         if (spielLaeuft) {
+            bewegePacman(richtungX, richtungY);
             repaint();
         }
     }
