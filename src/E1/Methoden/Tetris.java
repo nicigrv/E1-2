@@ -1,4 +1,4 @@
-package Methoden;
+package E1.Methoden;
 
 import javax.swing.*;
 import java.awt.*;

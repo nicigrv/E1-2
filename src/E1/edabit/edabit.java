@@ -1,4 +1,4 @@
-package edabit;
+package E1.edabit;
 
 public class edabit {
 

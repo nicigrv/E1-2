@@ -1,4 +1,4 @@
-package array;
+package E1.array;
 
 public class packman{
     public static void main (String [] args){

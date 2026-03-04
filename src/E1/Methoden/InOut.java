@@ -1,3 +1,5 @@
+package E1.Methoden;
+
 import java.util.Scanner;
 
 public class InOut

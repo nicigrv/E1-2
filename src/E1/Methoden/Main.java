@@ -1,6 +1,4 @@
-package Methoden;
-
-import java.awt.desktop.SystemSleepListener;
+package E1.Methoden;
 
 public class Main {
     public static void main(String[] args) {

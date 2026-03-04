@@ -1,4 +1,4 @@
-package array;
+package E1.array;
 
 public class PackamanAufStoff {
     final static int LEER = 0;

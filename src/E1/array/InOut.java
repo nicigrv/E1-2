@@ -1,4 +1,4 @@
-package Methoden;
+package E1.array;
 
 import java.util.Scanner;
 

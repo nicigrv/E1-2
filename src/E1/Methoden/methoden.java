@@ -1,4 +1,4 @@
-package Methoden;
+package E1.Methoden;
 
 public class methoden{
     
