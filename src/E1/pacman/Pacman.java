@@ -40,6 +40,7 @@ public class Pacman extends JPanel implements ActionListener {
     private int richtungX = 1;
     private int richtungY = 0;
 
+    //Anzahl Geister
     private static final int ANZGEIST = 4;
     // Geister
     private int[] geistX = new int[ANZGEIST];
@@ -186,22 +187,31 @@ public class Pacman extends JPanel implements ActionListener {
     // Speichert einen Score in die Textdatei
     private void speichereScoreInDatei(String name, int punkte, int zeit) {
         try {
+
+            //Uhrzeit & Tag Formatieren
             LocalDateTime jetzt = LocalDateTime.now();
             DateTimeFormatter datumFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy");
             DateTimeFormatter zeitFormat = DateTimeFormatter.ofPattern("HH:mm:ss");
 
+            //Speichern von Datum und Zeit des aktuellen eintrages
             String datum = jetzt.format(datumFormat);
             String uhrzeit = jetzt.format(zeitFormat);
 
+            //FW öffnen & Datei aus dem Verzeichnis mit der globalen Variable öffnen
             FileWriter fw = new FileWriter(DATEI_NAME, true);
             BufferedWriter bw = new BufferedWriter(fw);
 
+            //In die Datei die Informationen mit Semikolon getrennt aus den Variablen speichern
             bw.write(name + ";" + punkte + ";" + zeit + ";" + datum + ";" + uhrzeit);
+
+            //Zeilenumbruch in die nächste Zeile
             bw.newLine();
 
+            //File Wirter und Bufferd Writer beenden und schließen
             bw.close();
             fw.close();
 
+            //Mögliche Fehlermeldung finden und ausgeben
         } catch (IOException e) {
             System.err.println("Fehler beim Speichern: " + e.getMessage());
         }
@@ -209,18 +219,27 @@ public class Pacman extends JPanel implements ActionListener {
 
     // Lädt alle Scores aus der Datei und ermittelt die Top 5
     private void ladeTop5() {
+
+        //Temporäre array liste für die lokale Speicherung bereinigen
         top5Scores.clear();
         ArrayList<ScoreEintrag> alleScores = new ArrayList<>();
 
         try {
+            //Prüfung, ob die Datei exsiert und wenn ja, dann
             File datei = new File(DATEI_NAME);
             if (!datei.exists()) {
                 return;
             }
+
+            //File Reader starten und Datei öffnen
             FileReader fr = new FileReader(datei);
             BufferedReader br = new BufferedReader(fr);
+
+            //Übergabe String für die jeweilige Zeile erstellen
             String zeile;
+            //Wenn keine Zeile mehr, dann beendne
             while ((zeile = br.readLine()) != null) {
+                //Inhalte in array Liste auslesen
                 String[] teile = zeile.split(";");
                 if (teile.length == 5) {
                     String name = teile[0];
@@ -229,6 +248,7 @@ public class Pacman extends JPanel implements ActionListener {
                     String datum = teile[3];
                     String uhrzeit = teile[4];
 
+                    //Speichern der Codes
                     alleScores.add(new ScoreEintrag(name, punkte, zeit, datum, uhrzeit));
                 }
             }
@@ -271,14 +291,11 @@ public class Pacman extends JPanel implements ActionListener {
 
         initialisiereSpielfeld();
 
-        // Timer neu starten
         bewegungsTimer.start();
         sekundenTimer.start();
 
-        // Focus zurück auf Panel für Tastatur-Steuerung
         requestFocusInWindow();
 
-        // Neu zeichnen
         repaint();
     }
 
@@ -379,15 +396,11 @@ public class Pacman extends JPanel implements ActionListener {
                     if (istPositionGueltig(neuX, neuY)) break;
                 }
             }
-
-            // Bewege Geist
             if (istPositionGueltig(neuX, neuY)) {
                 geistX[i] = neuX;
                 geistY[i] = neuY;
             }
         }
-
-        // Prüfe Kollision nach Geisterbewegung
         pruefeGeistKollision();
     }
 
