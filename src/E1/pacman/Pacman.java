@@ -11,9 +11,8 @@ import java.util.Collections;
 import java.util.Comparator;
 
 public class Pacman extends JPanel implements ActionListener {
-    // Spielfeld-Dimensionen
-    private static final int BREITE = 20;
-    private static final int HOEHE = 20;
+    private int BREITE = 20;
+    private int HOEHE = 20;
     private static final int BLOCK_GROESSE = 30;
 
     // Spielfeld-Elemente
@@ -21,8 +20,8 @@ public class Pacman extends JPanel implements ActionListener {
     private static final int WAND = 1;
     private static final int PUNKT = 2;
 
-    // Spielfeld als 2D-Array
-    final int[][] spielfeld;
+    // Spielfeld als 2D-Array (wird nach dem Laden gesetzt)
+    int[][] spielfeld;
 
     // Datei für Leaderboard
     private static final String DATEI_NAME = "pacman_scores.txt";
@@ -40,7 +39,7 @@ public class Pacman extends JPanel implements ActionListener {
     private int richtungX = 1;
     private int richtungY = 0;
 
-    //Anzahl Geister
+    // Anzahl Geister
     private static final int ANZGEIST = 4;
     // Geister
     private int[] geistX = new int[ANZGEIST];
@@ -59,7 +58,10 @@ public class Pacman extends JPanel implements ActionListener {
     // Für Anzeige der Top 5
     private ArrayList<ScoreEintrag> top5Scores;
 
-    //Punkte speichern
+    // LEVEL LADEN
+    int level = 0;
+
+    // Punkte speichern
     class ScoreEintrag {
         String name;
         int punkte;
@@ -77,7 +79,6 @@ public class Pacman extends JPanel implements ActionListener {
     }
 
     public Pacman() {
-        spielfeld = new int[HOEHE][BREITE];
         spielLaeuft = true;
         punkte = 0;
         gesamtPunkte = 0;
@@ -86,7 +87,7 @@ public class Pacman extends JPanel implements ActionListener {
         // Lade Top 5 beim Start
         ladeTop5();
 
-        // Initialisiere Spielfeld
+        // Initialisiere Spielfeld (setzt auch BREITE/HOEHE)
         initialisiereSpielfeld();
 
         // Fenster-Eigenschaften
@@ -124,11 +125,9 @@ public class Pacman extends JPanel implements ActionListener {
                 String name = nameEingabe.getText();
 
                 if (!name.isEmpty()) {
-                    // Speichere Score in Datei
                     speichereScoreInDatei(name, punkte, zeitSekunden);
                     ladeTop5();
 
-                    // Verstecke Eingabefelder, zeige Restart-Button
                     nameEingabe.setVisible(false);
                     nameBestaetigen.setVisible(false);
                     nameEingabe.setText("");
@@ -186,32 +185,13 @@ public class Pacman extends JPanel implements ActionListener {
 
     // Speichert einen Score in die Textdatei
     private void speichereScoreInDatei(String name, int punkte, int zeit) {
-        try {
-
-            //Uhrzeit & Tag Formatieren
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(DATEI_NAME, true))) {
             LocalDateTime jetzt = LocalDateTime.now();
-            DateTimeFormatter datumFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-            DateTimeFormatter zeitFormat = DateTimeFormatter.ofPattern("HH:mm:ss");
+            String datum = jetzt.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+            String uhrzeit = jetzt.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
 
-            //Speichern von Datum und Zeit des aktuellen eintrages
-            String datum = jetzt.format(datumFormat);
-            String uhrzeit = jetzt.format(zeitFormat);
-
-            //FW öffnen & Datei aus dem Verzeichnis mit der globalen Variable öffnen
-            FileWriter fw = new FileWriter(DATEI_NAME, true);
-            BufferedWriter bw = new BufferedWriter(fw);
-
-            //In die Datei die Informationen mit Semikolon getrennt aus den Variablen speichern
             bw.write(name + ";" + punkte + ";" + zeit + ";" + datum + ";" + uhrzeit);
-
-            //Zeilenumbruch in die nächste Zeile
             bw.newLine();
-
-            //File Wirter und Bufferd Writer beenden und schließen
-            bw.close();
-            fw.close();
-
-            //Mögliche Fehlermeldung finden und ausgeben
         } catch (IOException e) {
             System.err.println("Fehler beim Speichern: " + e.getMessage());
         }
@@ -219,42 +199,30 @@ public class Pacman extends JPanel implements ActionListener {
 
     // Lädt alle Scores aus der Datei und ermittelt die Top 5
     private void ladeTop5() {
-
-        //Temporäre array liste für die lokale Speicherung bereinigen
         top5Scores.clear();
         ArrayList<ScoreEintrag> alleScores = new ArrayList<>();
 
         try {
-            //Prüfung, ob die Datei exsiert und wenn ja, dann
             File datei = new File(DATEI_NAME);
             if (!datei.exists()) {
                 return;
             }
 
-            //File Reader starten und Datei öffnen
-            FileReader fr = new FileReader(datei);
-            BufferedReader br = new BufferedReader(fr);
+            try (BufferedReader br = new BufferedReader(new FileReader(datei))) {
+                String zeile;
+                while ((zeile = br.readLine()) != null) {
+                    String[] teile = zeile.split(";");
+                    if (teile.length == 5) {
+                        String name = teile[0];
+                        int p = Integer.parseInt(teile[1]);
+                        int zeit = Integer.parseInt(teile[2]);
+                        String datum = teile[3];
+                        String uhrzeit = teile[4];
 
-            //Übergabe String für die jeweilige Zeile erstellen
-            String zeile;
-            //Wenn keine Zeile mehr, dann beendne
-            while ((zeile = br.readLine()) != null) {
-                //Inhalte in array Liste auslesen
-                String[] teile = zeile.split(";");
-                if (teile.length == 5) {
-                    String name = teile[0];
-                    int punkte = Integer.parseInt(teile[1]);
-                    int zeit = Integer.parseInt(teile[2]);
-                    String datum = teile[3];
-                    String uhrzeit = teile[4];
-
-                    //Speichern der Codes
-                    alleScores.add(new ScoreEintrag(name, punkte, zeit, datum, uhrzeit));
+                        alleScores.add(new ScoreEintrag(name, p, zeit, datum, uhrzeit));
+                    }
                 }
             }
-
-            br.close();
-            fr.close();
 
             Collections.sort(alleScores, new Comparator<ScoreEintrag>() {
                 public int compare(ScoreEintrag s1, ScoreEintrag s2) {
@@ -265,7 +233,6 @@ public class Pacman extends JPanel implements ActionListener {
                 }
             });
 
-            // Nimm nur die Top 5
             for (int i = 0; i < Math.min(5, alleScores.size()); i++) {
                 top5Scores.add(alleScores.get(i));
             }
@@ -283,7 +250,7 @@ public class Pacman extends JPanel implements ActionListener {
 
         spielLaeuft = true;
         punkte = 0;
-        gesamtPunkte = 0;
+        gesamtPunkte = 0;  // wird in initialisiereSpielfeld() neu gezählt
         zeitSekunden = 0;
 
         richtungX = 1;
@@ -300,50 +267,47 @@ public class Pacman extends JPanel implements ActionListener {
     }
 
     private void initialisiereSpielfeld() {
-        int[][] muster = {
-                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-                {1,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,1},
-                {1,2,1,1,2,1,1,1,2,1,1,2,1,1,1,2,1,1,2,1},
-                {1,2,1,1,2,1,1,1,2,1,1,2,1,1,1,2,1,1,2,1},
-                {1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1},
-                {1,2,1,1,2,1,2,1,1,1,1,1,1,2,1,2,1,1,2,1},
-                {1,2,2,2,2,1,2,2,2,1,1,2,2,2,1,2,2,2,2,1},
-                {1,1,1,1,2,1,1,1,2,1,1,2,1,1,1,2,1,1,1,1},
-                {1,1,1,1,2,1,2,2,2,2,2,2,2,2,1,2,1,1,1,1},
-                {1,2,2,2,2,2,2,1,1,0,0,1,1,2,2,2,2,2,2,1},
-                {1,1,1,1,2,1,2,1,1,1,1,1,1,2,1,2,1,1,1,1},
-                {1,1,1,1,2,1,2,2,2,2,2,2,2,2,1,2,1,1,1,1},
-                {1,1,1,1,2,1,2,1,1,1,1,1,1,2,1,2,1,1,1,1},
-                {1,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,1},
-                {1,2,1,1,2,1,1,1,2,1,1,2,1,1,1,2,1,1,2,1},
-                {1,2,2,1,2,2,2,2,2,0,0,2,2,2,2,2,1,2,2,1},
-                {1,1,2,1,2,1,2,1,1,1,1,1,1,2,1,2,1,2,1,1},
-                {1,2,2,2,2,1,2,2,2,1,1,2,2,2,1,2,2,2,2,1},
-                {1,2,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,2,1},
-                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
-        };
+        ArrayList<String> zeilen = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(level + ".txt"))) {
+            String zeile;
+            while ((zeile = br.readLine()) != null) {
+                zeilen.add(zeile);
+            }
+        } catch (IOException e) {
+            System.out.println("Fehler beim Laden der Level-Datei: " + e.getMessage());
+            return;
+        }
+
+        HOEHE = zeilen.size();
+        BREITE = zeilen.get(0).split(" ").length;
+
+        spielfeld = new int[HOEHE][BREITE];
 
         for (int i = 0; i < HOEHE; i++) {
+            String[] zahlen = zeilen.get(i).split(" ");
             for (int j = 0; j < BREITE; j++) {
-                spielfeld[i][j] = muster[i][j];
+                spielfeld[i][j] = Integer.parseInt(zahlen[j]);
                 if (spielfeld[i][j] == PUNKT) gesamtPunkte++;
             }
         }
+
         pacmanX = 9;
         pacmanY = 15;
         if (spielfeld[pacmanY][pacmanX] == PUNKT) {
             spielfeld[pacmanY][pacmanX] = LEER;
             gesamtPunkte--;
         }
+
         // Initialisiere Geister
-        geistX[0] = 9; geistY[0] = 9;
-        geistRichtungX[0] = 1; geistRichtungY[0] = 0;
+        geistX[0] = 9;  geistY[0] = 9;
+        geistRichtungX[0] = 1;  geistRichtungY[0] = 0;
         geistX[1] = 10; geistY[1] = 9;
         geistRichtungX[1] = -1; geistRichtungY[1] = 0;
-        geistX[2] = 9; geistY[2] = 10;
-        geistRichtungX[2] = 0; geistRichtungY[2] = 1;
-        geistX[3] = 9; geistY[3] = 8;
-        geistRichtungX[3] = 1; geistRichtungY[3] = 0;
+        geistX[2] = 9;  geistY[2] = 10;
+        geistRichtungX[2] = 0;  geistRichtungY[2] = 1;
+        geistX[3] = 9;  geistY[3] = 8;
+        geistRichtungX[3] = 1;  geistRichtungY[3] = 0;
     }
 
     private void bewegePacman(int dx, int dy) {
@@ -356,16 +320,9 @@ public class Pacman extends JPanel implements ActionListener {
                 spielfeld[pacmanY][pacmanX] = LEER;
                 punkte++;
                 if (punkte >= gesamtPunkte) {
-                    spielLaeuft = false;
-                    bewegungsTimer.stop();
-                    sekundenTimer.stop();
-                    // Zeige Namenseingabe
-                    nameEingabe.setVisible(true);
-                    nameBestaetigen.setVisible(true);
-                    nameEingabe.requestFocus();
+                    zeigeNameEingabe();
                 }
             }
-            // Prüfe Kollision mit Geistern
             pruefeGeistKollision();
         }
     }
@@ -375,7 +332,6 @@ public class Pacman extends JPanel implements ActionListener {
             int neuX = geistX[i] + geistRichtungX[i];
             int neuY = geistY[i] + geistRichtungY[i];
 
-            // Wenn Bewegung nicht möglich oder zufällig, wähle neue Richtung
             if (!istPositionGueltig(neuX, neuY) || Math.random() < 0.2) {
                 for (int versuch = 0; versuch < 10; versuch++) {
                     int zufallRichtung = (int)(Math.random() * 4);
@@ -383,11 +339,11 @@ public class Pacman extends JPanel implements ActionListener {
                     if (zufallRichtung == 0) {
                         geistRichtungX[i] = -1; geistRichtungY[i] = 0;
                     } else if (zufallRichtung == 1) {
-                        geistRichtungX[i] = 1; geistRichtungY[i] = 0;
+                        geistRichtungX[i] = 1;  geistRichtungY[i] = 0;
                     } else if (zufallRichtung == 2) {
-                        geistRichtungX[i] = 0; geistRichtungY[i] = -1;
+                        geistRichtungX[i] = 0;  geistRichtungY[i] = -1;
                     } else {
-                        geistRichtungX[i] = 0; geistRichtungY[i] = 1;
+                        geistRichtungX[i] = 0;  geistRichtungY[i] = 1;
                     }
 
                     neuX = geistX[i] + geistRichtungX[i];
@@ -407,20 +363,23 @@ public class Pacman extends JPanel implements ActionListener {
     private void pruefeGeistKollision() {
         for (int i = 0; i < ANZGEIST; i++) {
             if (pacmanX == geistX[i] && pacmanY == geistY[i]) {
-                spielLaeuft = false;
-                bewegungsTimer.stop();
-                sekundenTimer.stop();
-
-                // Zeige Namenseingabe
-                nameEingabe.setVisible(true);
-                nameBestaetigen.setVisible(true);
-                nameEingabe.requestFocus();
+                zeigeNameEingabe();
             }
         }
     }
 
+    private void zeigeNameEingabe() {
+        spielLaeuft = false;
+        bewegungsTimer.stop();
+        sekundenTimer.stop();
+        nameEingabe.setVisible(true);
+        nameBestaetigen.setVisible(true);
+        nameEingabe.requestFocus();
+    }
+
     private boolean istPositionGueltig(int x, int y) {
-        if (x < 0 || x >= BREITE || y < 0 || y >= HOEHE) return false;
+        // Nutzt die tatsächlichen Array-Dimensionen statt der Konstanten
+        if (x < 0 || x >= spielfeld[0].length || y < 0 || y >= spielfeld.length) return false;
         return spielfeld[y][x] != WAND;
     }
 
@@ -486,10 +445,10 @@ public class Pacman extends JPanel implements ActionListener {
         // Pacman zeichnen
         g.setColor(Color.YELLOW);
         int startWinkel = 0;
-        if (richtungX == 1) startWinkel = 45;
+        if (richtungX == 1)       startWinkel = 45;
         else if (richtungX == -1) startWinkel = 225;
         else if (richtungY == -1) startWinkel = 135;
-        else if (richtungY == 1) startWinkel = 315;
+        else if (richtungY == 1)  startWinkel = 315;
 
         g.fillArc(pacmanX * BLOCK_GROESSE, pacmanY * BLOCK_GROESSE,
                 (int)(BLOCK_GROESSE*0.8), (int)(BLOCK_GROESSE*0.8),
@@ -522,31 +481,25 @@ public class Pacman extends JPanel implements ActionListener {
             }
         }
 
-
+        // Spielende-Anzeige
         if (!spielLaeuft) {
             g.setFont(new Font("Arial", Font.BOLD, 40));
             if (punkte >= gesamtPunkte) {
-                g.setColor(Color.BLACK);
-                g.drawRect(HOEHE, BREITE, HOEHE, BREITE);
-
                 g.setColor(Color.GREEN);
-                g.drawString("GEWONNEN!", 100, HOEHE * BLOCK_GROESSE / 2);
+                g.drawString("GEWONNEN!", BREITE * BLOCK_GROESSE / 2 - 100, HOEHE * BLOCK_GROESSE / 2);
             } else {
-
                 g.setColor(Color.BLACK);
-                g.fillRect(1,1,BREITE * BLOCK_GROESSE, HOEHE * BLOCK_GROESSE);
-                repaint();
+                g.fillRect(0, 0, BREITE * BLOCK_GROESSE, HOEHE * BLOCK_GROESSE);
 
                 g.setColor(Color.RED);
-                g.drawString("GAME OVER!", BREITE*9, HOEHE * BLOCK_GROESSE / 2);
+                g.drawString("GAME OVER!", BREITE * BLOCK_GROESSE / 2 - 110, HOEHE * BLOCK_GROESSE / 2);
 
                 g.setColor(Color.GREEN);
-                g.drawString("Name:", BREITE*9, HOEHE*BLOCK_GROESSE/2 +40);
+                g.setFont(new Font("Arial", Font.BOLD, 20));
+                g.drawString("Name:", BREITE * BLOCK_GROESSE / 2 - 30, HOEHE * BLOCK_GROESSE / 2 + 40);
             }
         }
     }
-
-
 
     public static void main(String[] args) {
         JFrame fenster = new JFrame("Pacman");
